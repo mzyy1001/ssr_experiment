@@ -224,3 +224,62 @@ This matches the reviewer's predicted failure mode: "If random or shuffled vecto
 - The contribution shifts to: SSR with softmax normalization + LLM generation outperforms prompt-based approaches
 - Zero-vector steering (= unsteered generation + SSR) is actually the best, simplest method
 - Need to investigate WHY zero vector beats everything (likely: unsteered generation is more natural/diverse)
+
+### Parameter Sweep Results (2026-04-15)
+
+#### Sweep 1: Alpha (layer=16, steer-then-aggregate, top-5 clusters)
+
+| Alpha | Real JS ↓ | Zero JS | Wins | Δ vs Zero |
+|-------|-----------|---------|------|-----------|
+| **0.1** | **0.040** | 0.046 | **4/6** | **-12.2%** |
+| 0.3 | 0.045 | 0.046 | 3/6 | -2.4% |
+| 0.5 | 0.060 | 0.046 | 2/6 | +31.4% |
+| 1.0 | 0.070 | 0.046 | 2/6 | +50.3% |
+
+**Finding: Lower alpha is better. α=0.1 shows clear persona steering effect (4/6 wins).**
+
+#### Sweep 2: Layer (alpha=0.5, steer-then-aggregate, top-5)
+
+| Layer | Real JS ↓ | Zero JS | Wins |
+|-------|-----------|---------|------|
+| 8 | 0.062 | 0.046 | 2/6 |
+| 12 | 0.069 | 0.048 | 2/6 |
+| 20 | 0.052 | 0.045 | 3/6 |
+| **24** | **0.037** | 0.047 | **4/6** |
+| **28** | **0.042** | 0.046 | **4/6** |
+
+**Finding: Later layers (24-28) carry persona-relevant information. L=24 is the best (JS=0.037).**
+
+#### Sweep 3: Relevant-only clusters (alpha=0.5, layer=16)
+
+| Condition | Real JS | Zero JS | Wins |
+|-----------|---------|---------|------|
+| Relevant-only | 0.061 | 0.046 | 2/6 |
+
+**Finding: Relevance filtering at alpha=0.5 does not help (alpha too high).**
+
+#### Summary: Conditions Where Persona Steering Works
+
+| Condition | Real JS | Wins | Key Factor |
+|-----------|---------|------|------------|
+| **α=0.5, L=24, top-5 STA** | **0.037** | **4/6** | Late layer |
+| α=0.1, L=16, top-5 STA | 0.040 | 4/6 | Low alpha |
+| α=0.5, L=28, top-5 STA | 0.042 | 4/6 | Late layer |
+| α=0.3, L=16, top-5 STA | 0.045 | 3/6 | Marginal |
+
+**Central hypothesis is CONDITIONALLY SUPPORTED:**
+- Persona steering works when: (a) steering strength is subtle (α≤0.3), OR (b) steering targets later layers (L≥24)
+- Persona steering fails when: (a) α≥0.5 at middle layers, OR (b) too many clusters dilute the signal
+- Best config: α=0.5, L=24, top-5 steer-then-aggregate (JS=0.037, 4/6 wins, 21% better than zero)
+
+### Codex Re-Assessment After Sweep (2026-04-15)
+- **Score**: 4/10 (up from 3/10) — "plausible signal, but fragile on tiny benchmark"
+- **Verdict**: Workshop-ready now; ICWSM/Findings possible with second domain
+- **Key concern**: Best config selected from sweep on same 6 questions = potential overfit
+- **Path to 5.5-6/10**: Freeze config (α=0.5, L=24), validate on second domain
+- **Must-do next**:
+  1. Run random/shuffled controls at α=0.5,L=24 and α=0.1,L=16 (verify steering direction matters at best config)
+  2. Add second product domain
+  3. Tune baselines fairly (same SSR normalization, temperature sweep)
+  4. Statistical tests on frozen config
+  5. Separate top-k effect from steering effect
