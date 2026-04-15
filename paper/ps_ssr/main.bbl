@@ -1,0 +1,91 @@
+\begin{thebibliography}{12}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aher et~al.(2023)Aher, Arriaga, and Kalai]{aher2023using}
+Gati~V Aher, Rosa~I Arriaga, and Adam~Tauman Kalai.
+\newblock Using large language models to simulate multiple humans and replicate
+  human subject studies.
+\newblock In \emph{Proceedings of the 40th International Conference on Machine
+  Learning}, pages 337--371, 2023.
+
+\bibitem[Argyle et~al.(2023)Argyle, Busby, Fulda, Gubler, Rytting, and
+  Wingate]{argyle2023out}
+Lisa~P Argyle, Ethan~C Busby, Nancy Fulda, Joshua~R Gubler, Christopher
+  Rytting, and David Wingate.
+\newblock Out of one, many: Using language models to simulate human samples.
+\newblock \emph{Political Analysis}, 31\penalty0 (3):\penalty0 337--351, 2023.
+
+\bibitem[Brand et~al.(2024)Brand, Israeli, and Ngwe]{brand2024using}
+James Brand, Ayelet Israeli, and Donald Ngwe.
+\newblock Using {GPT} for market research.
+\newblock In \emph{Proceedings of the 25th ACM Conference on Economics and
+  Computation}, 2024.
+
+\bibitem[Jha et~al.(2025)Jha, DeYoung, and Narasimhan]{jha2025steering}
+Adarsh Jha, Henry DeYoung, and Karthik Narasimhan.
+\newblock Steering {LLM} interactions using persona vectors.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[Maier et~al.(2025)]{maier2025llms}
+Maximilian Maier et~al.
+\newblock {LLMs} reproduce human purchase intent via semantic similarity
+  elicitation of {L}ikert ratings.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[O'Connor et~al.(2010)O'Connor, Balasubramanyan, Routledge, and
+  Smith]{oconnor2010tweets}
+Brendan O'Connor, Ramnath Balasubramanyan, Bryan~R Routledge, and Noah~A Smith.
+\newblock From tweets to polls: Linking text sentiment to public opinion time
+  series.
+\newblock In \emph{Proceedings of the International AAAI Conference on Web and
+  Social Media}, volume~4, pages 122--129, 2010.
+
+\bibitem[Panickssery et~al.(2024)Panickssery, Gabrieli, Schulz, Tong, Hubinger,
+  and Turner]{panickssery2024steering}
+Nina Panickssery, Nick Gabrieli, Julian Schulz, Meg Tong, Evan Hubinger, and
+  Alexander~Matt Turner.
+\newblock Steering {L}lama 2 via contrastive activation addition.
+\newblock \emph{arXiv preprint arXiv:2312.06681}, 2024.
+
+\bibitem[Reveilhac et~al.(2022)Reveilhac, Steinmetz, and
+  Morselli]{reveilhac2022combining}
+M~Reveilhac, S~Steinmetz, and D~Morselli.
+\newblock Combining social media and survey data: A systematic review of
+  methods.
+\newblock \emph{Multimedia Tools and Applications}, 81:\penalty0 41295--41329,
+  2022.
+
+\bibitem[Santurkar et~al.(2023)Santurkar, Durmus, Ladhak, Lee, Liang, and
+  Hashimoto]{santurkar2023whose}
+Shibani Santurkar, Esin Durmus, Faisal Ladhak, Cinoo Lee, Percy Liang, and
+  Tatsunori Hashimoto.
+\newblock Whose opinions do language models reflect?
+\newblock In \emph{Proceedings of the 40th International Conference on Machine
+  Learning}, pages 29971--30004, 2023.
+
+\bibitem[Sun et~al.(2025)Sun, Pei, Choi, and Jurgens]{sun2025sociodemographic}
+Tiancheng Sun, Jiaxin Pei, Yejin Choi, and David Jurgens.
+\newblock Sociodemographic prompting is not enough: Limitations of llms for
+  simulating diverse subjective judgments.
+\newblock In \emph{Proceedings of the 2025 Conference of the North American
+  Chapter of the Association for Computational Linguistics}, 2025.
+
+\bibitem[Turner et~al.(2024)Turner, Thiergart, Udell, Leech, Mini, and
+  Pelrine]{turner2024activation}
+Alexander~Matt Turner, Lisa Thiergart, David Udell, Gavin Leech, Ulisse Mini,
+  and Kellin Pelrine.
+\newblock Activation addition: Steering language models without optimization.
+\newblock \emph{arXiv preprint arXiv:2308.10248}, 2024.
+
+\bibitem[Zou et~al.(2023)Zou, Phan, Chen, Campbell, Guo, Ren, Pan, Yin,
+  Mazeika, Dombrowski, et~al.]{zou2023representation}
+Andy Zou, Long Phan, Sarah Chen, James Campbell, Phillip Guo, Richard Ren,
+  Alexander Pan, Xuwang Yin, Mantas Mazeika, Ann-Kathrin Dombrowski, et~al.
+\newblock Representation engineering: A top-down approach to {AI} transparency.
+\newblock \emph{arXiv preprint arXiv:2310.01405}, 2023.
+
+\end{thebibliography}
