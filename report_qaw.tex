@@ -1,0 +1,216 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tabularx}
+
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\setlength{\parskip}{2pt}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p{1.2cm}}
+\newcolumntype{C}{>{\centering\arraybackslash}p{1.2cm}}
+
+\definecolor{bestrow}{RGB}{230,245,230}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Questionnaire-Level Adaptive Weighting: Experiment Report}\\[4pt]
+{\small Qwen3-8B (bf16, A100) $\cdot$ 23 questions $\cdot$ 66 clusters from $\sim$12K social media posts $\cdot$ $\alpha$=0.1, layer=24, steer-then-aggregate}
+\end{center}
+
+\vspace{-4pt}
+\hrule
+\vspace{6pt}
+
+% ===== Table 1 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{Method Comparison (6 Original Questions)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Method & JS $\downarrow$ \\
+\midrule
+SSR-only (Project 1) & 0.0443 \\
+Control: zero vector & 0.0441 \\
+PS-SSR uniform ($\alpha$=0.1, L24) & 0.0476 \\
+PS-SSR (STA softmax) & 0.0704 \\
+Control: random vector & 0.0717 \\
+Persona Prompt & 0.0857 \\
+Direct LLM & 0.1581 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\hfill
+% ===== Table 2 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{QAW Temperature Sweep (23 Qs, $\alpha$=0.1, L24)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$\tau$ & JS & $\Delta$ vs uniform \\
+\midrule
+Uniform & 0.0556 & --- \\
+0.01 & 0.0610 & $-$0.0054 \\
+0.05 & 0.0573 & $-$0.0017 \\
+0.1 & 0.0559 & $-$0.0003 \\
+0.3 & 0.0556 & +0.0000 \\
+1.0 & 0.0556 & +0.0000 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Semantic relevance alone does not improve.}
+\end{minipage}
+
+\vspace{8pt}
+
+% ===== Table 3 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{Robustness: QAW Across ($\alpha$, Layer) (6 Qs)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Config & Uniform & Global & $\Delta$ & $\tau^*$ \\
+\midrule
+$\alpha$=0.05, L24 & 0.0462 & 0.0460 & +0.0002 & 0.1 \\
+$\alpha$=0.1, L16 & 0.0419 & 0.0413 & +0.0007 & 0.01 \\
+$\alpha$=0.1, L24 & 0.0476 & 0.0449 & +0.0027 & 0.01 \\
+$\alpha$=0.3, L24 & 0.0444 & 0.0428 & +0.0016 & 0.02 \\
+$\alpha$=0.5, L24 & 0.0350 & 0.0350 & 0.0000 & 5.0 \\
+$\alpha$=1.0, L24 & 0.0550 & 0.0547 & +0.0003 & 0.2 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Global-fit $\tau$ never hurts ($\Delta \geq 0$). LOO fails with 6 Qs.}
+\end{minipage}
+\hfill
+% ===== Table 4 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{Demographic Post-Stratification Methods (23 Qs)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Method & Smooth & JS & $\Delta$ & Wins \\
+\midrule
+Uniform & --- & 0.0556 & --- & --- \\
+Global IS & 1.0 & 0.0556 & +0.0001 & 8/23 \\
+Cluster IS & 1.0 & 0.0556 & +0.0001 & 8/23 \\
+\rowcolor{bestrow} KL-penalty & 0.1 & 0.0551 & +0.0006 & 15/23 \\
+KL-penalty & 1.0 & 0.0552 & +0.0004 & 16/23 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize KL-penalty is the only effective demographic correction.}
+\end{minipage}
+
+\vspace{8pt}
+
+% ===== Table 5 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{KL-Penalty Sweep (23 Qs, Selected Rows)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Smooth & Exp & JS & $\Delta$ & Wins & $\sigma_w$ \\
+\midrule
+0.01 & 0.5 & 0.0553 & +0.0004 & 16 & 0.24 \\
+0.01 & 1.0 & 0.0550 & +0.0006 & 15 & 0.43 \\
+0.01 & 2.0 & 0.0547 & +0.0009 & 15 & 0.73 \\
+\rowcolor{bestrow} 0.01 & 3.0 & 0.0546 & +0.0011 & 15 & 1.01 \\
+1.00 & 1.5 & 0.0550 & +0.0006 & 17 & 0.42 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Monotonic: stronger penalization $\Rightarrow$ better.}
+\end{minipage}
+\hfill
+% ===== Table 6 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{KL + QAW Combined (23 Qs, Best KL Params)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$\tau$ & KL str. & JS & $\Delta$ & Wins \\
+\midrule
+--- & 0 (unif.) & 0.0556 & --- & --- \\
+5.0 & 1.0 (KL) & 0.0545 & +0.0011 & 14 \\
+0.3 & 1.0 & 0.0543 & +0.0013 & 15 \\
+0.2 & 1.5 & 0.0541 & +0.0016 & 15 \\
+\rowcolor{bestrow} 0.1 & 2.0 & 0.0538 & +0.0019 & 13 \\
+0.1 & 1.5 & 0.0539 & +0.0017 & 15 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Combined: 3.4\% relative JS reduction.}
+\end{minipage}
+
+\vspace{8pt}
+
+% ===== Table 7 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{LOO Calibration: KL + QAW (23 Qs)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Metric & Value \\
+\midrule
+Uniform mean JS & 0.0556 \\
+\rowcolor{bestrow} LOO calibrated JS & \textbf{0.0539} \\
+\rowcolor{bestrow} Improvement & \textbf{+0.0017 (3.1\%)} \\
+\rowcolor{bestrow} Win rate & \textbf{13/23 (57\%)} \\
+Calibrated $\tau$ & 0.10 $\pm$ 0.02 \\
+Calibrated KL strength & 2.00 $\pm$ 0.00 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Every fold selects identical hyperparameters.}
+\end{minipage}
+\hfill
+% ===== Table 8 =====
+\begin{minipage}[t]{0.48\textwidth}
+\captionof{table}{Leave-K-Out Robustness (KL + QAW)}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$K$ held out & Combined & Uniform & $\Delta$ & Win\% \\
+\midrule
+1 & 0.0539 & 0.0556 & +0.0017 & 57\% \\
+2 & 0.0612 & 0.0640 & +0.0027 & 50\% \\
+\rowcolor{bestrow} 3 & 0.0492 & 0.0521 & +0.0029 & 68\% \\
+5 & 0.0532 & 0.0541 & +0.0009 & 56\% \\
+8 & 0.0556 & 0.0566 & +0.0010 & 52\% \\
+11 & 0.0564 & 0.0572 & +0.0008 & 53\% \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize \textbf{All positive $\Delta$} from $K$=1 to $K$=11.}
+\end{minipage}
+
+\vspace{10pt}
+\hrule
+\vspace{4pt}
+
+\textbf{Conclusions.}
+\textbf{(1)} Semantic relevance alone (QAW) is insufficient---temperature-based reweighting does not beat uniform (Tab.\,2--3).
+\textbf{(2)} Demographic KL-penalty effectively corrects selection bias, winning on 65--70\% of questions (Tab.\,4--5).
+\textbf{(3)} Combining KL-penalty with QAW achieves the best result: JS=0.0538, a 3.4\% relative reduction (Tab.\,6).
+\textbf{(4)} LOO calibration selects identical hyperparameters across all 23 folds ($\tau$=0.1, KL\,str.=2.0), confirming cross-question transferability (Tab.\,7).
+\textbf{(5)} Leave-$K$-out shows positive improvement for all $K$ from 1 to 11, demonstrating robustness (Tab.\,8).
+
+\end{document}

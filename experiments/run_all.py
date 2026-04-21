@@ -94,6 +94,43 @@ def run_phase(phase: str, device: str = "cuda:2", **kwargs):
         ]
         subprocess.run(cmd, check=True)
 
+    elif phase == "qaw_analysis":
+        print("\n" + "=" * 60)
+        print("Phase 2D: QAW relevance analysis (SSR-only)")
+        print("=" * 60)
+        cmd = [
+            sys.executable, "adaptive_weights.py",
+            "--baseline_results", f"{RESULTS_DIR}/all_questions.json",
+            "--topics_path", f"{DATA_DIR}/3_cluster_topics.json",
+            "--embedding_model", EMBEDDING_MODEL,
+            "--mode", "ssr_only",
+            "--output", f"{RESULTS_DIR}/qaw_analysis.json",
+        ]
+        subprocess.run(cmd, check=True)
+
+    elif phase == "qaw_ps_ssr":
+        print("\n" + "=" * 60)
+        print("Phase 2D+3: PS-SSR with QAW (adaptive weights + steering)")
+        print("=" * 60)
+        layer = kwargs.get("layer", 24)
+        alpha = kwargs.get("alpha", 0.1)
+        n_samples = kwargs.get("n_samples", 20)
+
+        cmd = [
+            sys.executable, "adaptive_weights.py",
+            "--baseline_results", f"{RESULTS_DIR}/all_questions.json",
+            "--topics_path", f"{DATA_DIR}/3_cluster_topics.json",
+            "--embedding_model", EMBEDDING_MODEL,
+            "--mode", "ps_ssr",
+            "--model_path", MODEL_PATH,
+            "--vectors_path", f"{RESULTS_DIR}/persona_vectors_L{layer}_N{n_samples}.npz",
+            "--alpha", str(alpha),
+            "--layer", str(layer),
+            "--device", device,
+            "--output", f"{RESULTS_DIR}/qaw_ps_ssr_L{layer}_A{alpha}.json",
+        ]
+        subprocess.run(cmd, check=True)
+
     elif phase == "evaluate":
         print("\n" + "=" * 60)
         print("Evaluation: Comparing all methods")
@@ -149,6 +186,8 @@ def run_phase(phase: str, device: str = "cuda:2", **kwargs):
         run_phase("baseline_persona", device)
         run_phase("ps_ssr", device, strategy="steer_then_aggregate")
         run_phase("ps_ssr", device, strategy="aggregate_then_steer")
+        run_phase("qaw_analysis", device)
+        run_phase("qaw_ps_ssr", device, **kwargs)
         run_phase("evaluate", device)
 
     else:
@@ -164,6 +203,7 @@ if __name__ == "__main__":
             "extract", "baseline_direct", "baseline_persona",
             "ps_ssr", "evaluate",
             "ablation_layer", "ablation_alpha",
+            "qaw_analysis", "qaw_ps_ssr",
             "all",
         ],
         default="all",

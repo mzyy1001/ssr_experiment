@@ -2,3 +2,26 @@ venv/
 __pycache__/
 *.pyc
 data/
+
+# Secrets
+.env
+.env.local
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# External tooling (nested repo)
+Auto-claude-code-research-in-sleep/
+
+# Redundant archive (contents already in paper/selection_bias/)
+paper/selection bias.zip

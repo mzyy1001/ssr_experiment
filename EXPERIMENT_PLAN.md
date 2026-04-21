@@ -46,6 +46,26 @@ using scipy.optimize or simple grid search (few enough clusters to be tractable)
 **Approach C — LLM-judged relevance weights**
 Ask the LLM to rate each cluster's relevance to the question (already implemented in Project 1 as `cluster_relevance`), convert to soft weights.
 
+**Approach D — Questionnaire-level Adaptive Weighting (QAW)**
+
+*Motivation*: Approaches A/C use **question-agnostic** global weights (empirically confirmed: all 6 questions receive identical cluster weights). This is problematic because cluster/topic relevance varies by question — e.g., clusters about taste/price are irrelevant to a question about seasonal patterns. The sweep results confirm this: steering with uniform weights (PS-SSR JS≈0.070) underperforms the zero-vector control (JS≈0.044), indicating that irrelevant clusters inject noise.
+
+*Core idea*: Exploit **within-questionnaire correlation** to adaptively calibrate question-aware topic weights. Questions in the same questionnaire share latent structure; if that correlation is strong enough, we can calibrate on a subset of questions with ground truth and transfer to the rest.
+
+*Method*:
+1. **Question-topic relevance**: For each question $q$ and cluster $c$, compute $r(q, c) = \text{cosine}(\text{embed}(q), \text{embed}(\text{topic}_c))$ using the sentence encoder.
+2. **Parameterized reweighting**: $w_c(q) = w_c^{\text{base}} \cdot \text{softmax}_\tau(r(q, \cdot))_c$, where $\tau$ is a temperature parameter controlling how aggressively to sharpen relevance.
+3. **Questionnaire-level calibration**: Calibrate $\tau$ via leave-one-out cross-validation on the questionnaire: for each held-out question, optimize $\tau$ on the remaining 5 questions to minimize mean JS divergence, then evaluate on the held-out question.
+4. **Transfer**: The calibrated $\tau$ generalizes across questions in the same questionnaire because they share the same topic space and similar question-topic relevance structure.
+
+*Relation to UQ paper* (*Uncertainty Quantification for LLM-Based Survey Simulations*): Same calibration-transfer principle — use real observations from related questions to adaptively tune a simulation parameter (here: topic weighting temperature), then generalize. The UQ paper calibrates synthetic sample size for coverage; we calibrate topic relevance sharpening for JS divergence reduction.
+
+*Practical advantages*:
+- Low-dimensional calibration (1 parameter: $\tau$) — tractable with 6 questions
+- No per-question weight optimization (unlike Approach B oracle)
+- Preserves generalization via cross-validation structure
+- Interpretable: each question gets a different weight vector based on semantic relevance
+
 ### Phase 3: Steered Generation + SSR
 
 For each survey question $q$:
@@ -89,6 +109,8 @@ For each survey question $q$:
 10. **PS-SSR (Aggregate-then-steer)**: Strategy 1 with weight approach A/C
 11. **PS-SSR (Steer-then-aggregate)**: Strategy 2 with weight approach A/C
 12. **PS-SSR (Oracle weights)**: Strategy 2 with Approach B (upper bound only)
+13. **PS-SSR + QAW**: Strategy 2 with Approach D (adaptive question-aware weights, LOO calibration)
+14. **PS-SSR + QAW (no steering)**: QAW weights applied to SSR-only (isolates weight improvement from steering)
 
 ### Evaluation Metrics
 - **JS Divergence** (primary): between predicted and true survey distributions
@@ -107,8 +129,11 @@ For each survey question $q$:
 2. Steering strength $\alpha$: [0.5, 1.0, 2.0, 5.0, 10.0]
 3. Number of samples N for vector extraction
 4. Negation strategy: distant-cluster vs LLM-generated
-5. Weight approach: A vs B vs C
+5. Weight approach: A vs B vs C vs D
 6. Steering strategy: aggregate-then-steer vs steer-then-aggregate
+7. QAW temperature sweep: $\tau$ ∈ [0.01, 0.05, 0.1, 0.3, 0.5, 1.0] (to visualize relevance sharpening effect)
+8. QAW with/without steering (isolate weight improvement from steering contribution)
+9. QAW embedding model: medical-domain vs general-domain encoder for relevance scoring
 
 ## Implementation Plan
 
@@ -176,5 +201,6 @@ Compare SSR normalization methods to ensure conclusions aren't normalization art
 1. **Persona steering improves distributional approximation**: PS-SSR achieves lower JS divergence than embedding-only SSR, with statistical significance via paired permutation test, controlling for random/shuffled vectors
 2. **Activation vectors encode cluster-discriminative directions**: Persona vectors steer generation in directions consistent with cluster topics (validated via control experiments, not overclaimed as "attitude capture")
 3. **Steer-then-aggregate empirically outperforms aggregate-then-steer**: Observed on this case study; mechanistic support via per-cluster entropy analysis, framed as empirical finding not general law
-4. **SSR weights transfer to steering context**: Topic-level SSR weights (Approach A) perform near oracle-optimized weights, suggesting no task-specific optimization is needed
-5. **Interpretable pipeline**: The two-layer decomposition provides an audit trail; the SSR component is fully interpretable; the steering component adds a latent intervention that is less interpretable but empirically validated
+4. **Question-aware adaptive weighting reduces JS divergence**: QAW (Approach D) outperforms question-agnostic weights (Approach A) by suppressing irrelevant cluster contributions, with calibration transferring across questions via leave-one-out
+5. **Within-questionnaire correlation enables weight transfer**: The calibrated temperature $\tau$ is consistent across LOO folds, indicating that questions in the same questionnaire share sufficient structure for cross-question calibration
+6. **Interpretable pipeline**: The two-layer decomposition provides an audit trail; the SSR component is fully interpretable; QAW adds a principled, transparent question-topic relevance layer
