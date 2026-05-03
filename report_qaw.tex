@@ -23,8 +23,9 @@
 \begin{document}
 
 \begin{center}
-{\Large\bfseries Questionnaire-Level Adaptive Weighting: Experiment Report}\\[4pt]
-{\small Qwen3-8B (bf16, A100) $\cdot$ 23 questions $\cdot$ 66 clusters from $\sim$12K social media posts $\cdot$ $\alpha$=0.1, layer=24, steer-then-aggregate}
+{\Large\bfseries PS-SSR 6Q Evaluation Report}\\[4pt]
+{\small Qwen3-8B (bf16, A100) $\cdot$ 6 original survey questions $\cdot$ 66 clusters from $\sim$12K social media posts $\cdot$ Mean JS divergence}\\[2pt]
+{\footnotesize Baseline to beat: Direct SSR = \textbf{0.0277}. (23Q expanded set is synthetic; quarantined.)}
 \end{center}
 
 \vspace{-4pt}
@@ -32,174 +33,118 @@
 \vspace{6pt}
 
 % ===== Table 1 =====
-\begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{Method Comparison (6 Original Questions)}
+\captionof{table}{Lead results: methods beating Direct SSR (\texttt{improve\_orig6.json}, 2026-04-21)}
 \vspace{-4pt}
 \centering\small
-\begin{tabular}{@{}lr@{}}
+\begin{tabular}{@{}lccl@{}}
 \toprule
-Method & JS $\downarrow$ \\
+Method & Mean JS $\downarrow$ & $\Delta$ vs SSR & Notes \\
 \midrule
-SSR-only (Project 1) & 0.0443 \\
-Control: zero vector & 0.0441 \\
-PS-SSR uniform ($\alpha$=0.1, L24) & 0.0476 \\
-PS-SSR (STA softmax) & 0.0704 \\
-Control: random vector & 0.0717 \\
-Persona Prompt & 0.0857 \\
-Direct LLM & 0.1581 \\
+\rowcolor{bestrow} \textbf{SSR + LLM-dist, $w$=0.5} & \textbf{0.0257} & \textbf{$-$7.2\%} & \textbf{Primary contribution} \\
+SSR + LLM-dist, $w$=0.6 & 0.0258 & $-$6.9\% & \\
+SSR + LLM-dist, $w$=0.7 & 0.0259 & $-$6.5\% & \\
+LLM-dist top-10 (alone) & 0.0259 & $-$6.5\% & LLM-only distribution estimation \\
+SSR + LLM-dist, $w$=0.8 & 0.0261 & $-$5.8\% & \\
+SSR top-5 clusters & 0.0272 & $-$1.8\% & Tuning knob, small effect \\
+Ensemble $w$=0.95 (SSR + ML steer) & 0.0272 & $-$1.8\% & Steering as ensemble member \\
+SSR $n$=50 posts & 0.0275 & $-$0.7\% & Post-count ablation \\
+\midrule
+\textit{Direct SSR baseline} & \textit{0.0277} & --- & \\
 \bottomrule
 \end{tabular}
-\end{minipage}
-\hfill
-% ===== Table 2 =====
-\begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{QAW Temperature Sweep (23 Qs, $\alpha$=0.1, L24)}
-\vspace{-4pt}
-\centering\small
-\begin{tabular}{@{}ccc@{}}
-\toprule
-$\tau$ & JS & $\Delta$ vs uniform \\
-\midrule
-Uniform & 0.0556 & --- \\
-0.01 & 0.0610 & $-$0.0054 \\
-0.05 & 0.0573 & $-$0.0017 \\
-0.1 & 0.0559 & $-$0.0003 \\
-0.3 & 0.0556 & +0.0000 \\
-1.0 & 0.0556 & +0.0000 \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\scriptsize Semantic relevance alone does not improve.}
-\end{minipage}
 
 \vspace{8pt}
 
+\begin{minipage}[t]{0.48\textwidth}
+% ===== Table 2 =====
+\captionof{table}{SSR + Multi-Layer Steering Ensemble (\texttt{persona\_methods.json})}
+\vspace{-4pt}
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Div & JS $\downarrow$ & $\Delta$ \\
+\midrule
+BL: Direct SSR & 0.0105 & 0.0276 & --- \\
+\rowcolor{bestrow} E: Ens $w$=0.5 & 0.0083 & 0.0261 & $-$5.4\% \\
+E: Ens $w$=0.7 & 0.0071 & 0.0264 & $-$4.3\% \\
+E: Ens $w$=0.9 & 0.0088 & 0.0267 & $-$3.3\% \\
+B: LLM-dist est. & 0.0162 & 0.0273 & $-$1.1\% \\
+C: SSR+LLM corr. & 0.0134 & 0.0296 & +7.2\% \\
+D: Proj SSR $s$=0.5 & 0.1214 & 0.0405 & +46.7\% \\
+A: LLM voting & 0.0594 & 0.2360 & +755\% \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\scriptsize Steering alone fails; useful only in ensemble.}
+\end{minipage}
+\hfill
 % ===== Table 3 =====
 \begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{Robustness: QAW Across ($\alpha$, Layer) (6 Qs)}
+\captionof{table}{Multi-Layer Steering Depth (\texttt{improve\_orig6})}
 \vspace{-4pt}
 \centering\small
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lc@{}}
 \toprule
-Config & Uniform & Global & $\Delta$ & $\tau^*$ \\
+Variant & Mean JS $\downarrow$ \\
 \midrule
-$\alpha$=0.05, L24 & 0.0462 & 0.0460 & +0.0002 & 0.1 \\
-$\alpha$=0.1, L16 & 0.0419 & 0.0413 & +0.0007 & 0.01 \\
-$\alpha$=0.1, L24 & 0.0476 & 0.0449 & +0.0027 & 0.01 \\
-$\alpha$=0.3, L24 & 0.0444 & 0.0428 & +0.0016 & 0.02 \\
-$\alpha$=0.5, L24 & 0.0350 & 0.0350 & 0.0000 & 5.0 \\
-$\alpha$=1.0, L24 & 0.0550 & 0.0547 & +0.0003 & 0.2 \\
+ML L[12,16,20,24] $n$=5 & 0.0643 \\
+ML L[16,20,24,28] $n$=5 & 0.0434 \\
+ML L[20,24] $n$=5 & 0.0404 \\
+ML L[16,24] $n$=5 & 0.0378 \\
+MultiLayer $n$=10 & 0.0384 \\
+MultiLayer $n$=5 & 0.0396 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\scriptsize Global-fit $\tau$ never hurts ($\Delta \geq 0$). LOO fails with 6 Qs.}
+{\scriptsize Deeper stacks hurt; 2-layer [16,24] is best in isolation but still $>$ SSR.}
 \end{minipage}
-\hfill
+
+\vspace{8pt}
+
 % ===== Table 4 =====
 \begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{Demographic Post-Stratification Methods (23 Qs)}
+\captionof{table}{Why single-layer steering fails (\texttt{fix\_steering})}
 \vspace{-4pt}
 \centering\small
-\begin{tabular}{@{}llccc@{}}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-Method & Smooth & JS & $\Delta$ & Wins \\
+Variant & Div & JS $\downarrow$ \\
 \midrule
-Uniform & --- & 0.0556 & --- & --- \\
-Global IS & 1.0 & 0.0556 & +0.0001 & 8/23 \\
-Cluster IS & 1.0 & 0.0556 & +0.0001 & 8/23 \\
-\rowcolor{bestrow} KL-penalty & 0.1 & 0.0551 & +0.0006 & 15/23 \\
-KL-penalty & 1.0 & 0.0552 & +0.0004 & 16/23 \\
+\rowcolor{bestrow} Direct SSR & 0.0105 & 0.0276 \\
+Multi-layer $\alpha$=0.1 & 0.0222 & 0.0298 \\
+ICL (5 posts) & 0.0052 & 0.0368 \\
+Contrastive prompt & 0.0086 & 0.0415 \\
+ICL + steer $\alpha$=0.3 & 0.0065 & 0.0420 \\
+Large $\alpha$=3.0, unit-norm & 0.0046 & 0.0622 \\
+Single-layer $\alpha$=0.1, L24 & 0.0046 & 0.0659 \\
+Large $\alpha$=1.0, unit-norm & 0.0037 & 0.0689 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\scriptsize KL-penalty is the only effective demographic correction.}
+{\scriptsize Single-layer steering is 2.4$\times$ worse than Direct SSR.}
 \end{minipage}
-
-\vspace{8pt}
-
+\hfill
 % ===== Table 5 =====
 \begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{KL-Penalty Sweep (23 Qs, Selected Rows)}
+\captionof{table}{Post \& Cluster Ablation (\texttt{improve\_orig6})}
 \vspace{-4pt}
 \centering\small
-\begin{tabular}{@{}cccccc@{}}
+\begin{tabular}{@{}llc@{}}
 \toprule
-Smooth & Exp & JS & $\Delta$ & Wins & $\sigma_w$ \\
+Axis & Setting & Mean JS \\
 \midrule
-0.01 & 0.5 & 0.0553 & +0.0004 & 16 & 0.24 \\
-0.01 & 1.0 & 0.0550 & +0.0006 & 15 & 0.43 \\
-0.01 & 2.0 & 0.0547 & +0.0009 & 15 & 0.73 \\
-\rowcolor{bestrow} 0.01 & 3.0 & 0.0546 & +0.0011 & 15 & 1.01 \\
-1.00 & 1.5 & 0.0550 & +0.0006 & 17 & 0.42 \\
+Posts/cluster & 30 & 0.0277 \\
+ & 50 & 0.0275 \\
+ & 80 & 0.0276 \\
+\midrule
+Top-$K$ clusters & 5 & 0.0272 \\
+ & 10 & 0.0272 \\
+ & 15 & 0.0277 \\
+ & 20 & 0.0280 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\scriptsize Monotonic: stronger penalization $\Rightarrow$ better.}
-\end{minipage}
-\hfill
-% ===== Table 6 =====
-\begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{KL + QAW Combined (23 Qs, Best KL Params)}
-\vspace{-4pt}
-\centering\small
-\begin{tabular}{@{}ccccc@{}}
-\toprule
-$\tau$ & KL str. & JS & $\Delta$ & Wins \\
-\midrule
---- & 0 (unif.) & 0.0556 & --- & --- \\
-5.0 & 1.0 (KL) & 0.0545 & +0.0011 & 14 \\
-0.3 & 1.0 & 0.0543 & +0.0013 & 15 \\
-0.2 & 1.5 & 0.0541 & +0.0016 & 15 \\
-\rowcolor{bestrow} 0.1 & 2.0 & 0.0538 & +0.0019 & 13 \\
-0.1 & 1.5 & 0.0539 & +0.0017 & 15 \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\scriptsize Combined: 3.4\% relative JS reduction.}
-\end{minipage}
-
-\vspace{8pt}
-
-% ===== Table 7 =====
-\begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{LOO Calibration: KL + QAW (23 Qs)}
-\vspace{-4pt}
-\centering\small
-\begin{tabular}{@{}lr@{}}
-\toprule
-Metric & Value \\
-\midrule
-Uniform mean JS & 0.0556 \\
-\rowcolor{bestrow} LOO calibrated JS & \textbf{0.0539} \\
-\rowcolor{bestrow} Improvement & \textbf{+0.0017 (3.1\%)} \\
-\rowcolor{bestrow} Win rate & \textbf{13/23 (57\%)} \\
-Calibrated $\tau$ & 0.10 $\pm$ 0.02 \\
-Calibrated KL strength & 2.00 $\pm$ 0.00 \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\scriptsize Every fold selects identical hyperparameters.}
-\end{minipage}
-\hfill
-% ===== Table 8 =====
-\begin{minipage}[t]{0.48\textwidth}
-\captionof{table}{Leave-K-Out Robustness (KL + QAW)}
-\vspace{-4pt}
-\centering\small
-\begin{tabular}{@{}ccccc@{}}
-\toprule
-$K$ held out & Combined & Uniform & $\Delta$ & Win\% \\
-\midrule
-1 & 0.0539 & 0.0556 & +0.0017 & 57\% \\
-2 & 0.0612 & 0.0640 & +0.0027 & 50\% \\
-\rowcolor{bestrow} 3 & 0.0492 & 0.0521 & +0.0029 & 68\% \\
-5 & 0.0532 & 0.0541 & +0.0009 & 56\% \\
-8 & 0.0556 & 0.0566 & +0.0010 & 52\% \\
-11 & 0.0564 & 0.0572 & +0.0008 & 53\% \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\scriptsize \textbf{All positive $\Delta$} from $K$=1 to $K$=11.}
+{\scriptsize Tuning SSR in isolation gives only marginal gains.}
 \end{minipage}
 
 \vspace{10pt}
@@ -207,10 +152,9 @@ $K$ held out & Combined & Uniform & $\Delta$ & Win\% \\
 \vspace{4pt}
 
 \textbf{Conclusions.}
-\textbf{(1)} Semantic relevance alone (QAW) is insufficient---temperature-based reweighting does not beat uniform (Tab.\,2--3).
-\textbf{(2)} Demographic KL-penalty effectively corrects selection bias, winning on 65--70\% of questions (Tab.\,4--5).
-\textbf{(3)} Combining KL-penalty with QAW achieves the best result: JS=0.0538, a 3.4\% relative reduction (Tab.\,6).
-\textbf{(4)} LOO calibration selects identical hyperparameters across all 23 folds ($\tau$=0.1, KL\,str.=2.0), confirming cross-question transferability (Tab.\,7).
-\textbf{(5)} Leave-$K$-out shows positive improvement for all $K$ from 1 to 11, demonstrating robustness (Tab.\,8).
+\textbf{(1) Primary result}: SSR + LLM-dist at $w$=0.5 reaches Mean JS = \textbf{0.0257}, a \textbf{7.2\% relative reduction} over Direct SSR (0.0277).
+\textbf{(2) Two signal sources}: (i) the LLM-dist mixture accounts for most of the gain; (ii) the SSR + multi-layer steering ensemble contributes an independent $\sim$5\% improvement.
+\textbf{(3) Negative results to preserve}: single-layer steering at L24 (JS=0.0659), per-post LLM voting (JS=0.2360), persona-projected SSR, and deep multi-layer stacks all underperform the baseline.
+\textbf{(4) Proposed paper framing}: SSR + LLM-dist as the main method; multi-layer steering ensemble as ablation; drop QAW, KL demographic reweighting, and the 23Q expansion — these were evaluated on synthetic questions and do not carry over to the real benchmark.
 
 \end{document}

@@ -1,0 +1,19 @@
+{
+  "round": 5,
+  "threadId": "019dba95-6058-7e30-811a-2c2f624f6c60",
+  "status": "completed",
+  "difficulty": "medium",
+  "last_score": 7.0,
+  "last_verdict": "Ready (workshop / applied NLP); Almost (EMNLP Findings); Not ready (main-track due to n=6)",
+  "pending_experiments": [],
+  "timestamp": "2026-04-23T19:00:00",
+  "target_document": "/home/mzyy1001/business/STORY_v2.md",
+  "stop_reason": "Score 7/10 after author-flagged correction round (Round 5). Reviewer accepted that Maier paper has no clusters (verified §A.4.3 + eq. 1) and that all cluster-SSR code in repo is authored by the same author in this same project. Cluster-weighted hierarchical SSR (M0) is the genuine primary novel contribution.",
+  "history": {
+    "1": {"score": 4.0, "verdict": "Not ready"},
+    "2": {"score": 5.0, "verdict": "Almost (workshop)"},
+    "3": {"score": 5.0, "verdict": "Almost (taxonomy bug found)"},
+    "4": {"score": 6.0, "verdict": "Ready (workshop) — but conclusion based on wrong attribution"},
+    "5": {"score": 7.0, "verdict": "Ready (workshop / applied) — corrected attribution"}
+  }
+}

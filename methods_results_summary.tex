@@ -1,0 +1,263 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=1.6cm]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{hyperref}
+
+\hypersetup{colorlinks=true, linkcolor=blue!60!black, urlcolor=blue!60!black}
+
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\titlespacing*{\subsubsection}{0pt}{4pt}{1pt}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+
+\definecolor{bestrow}{RGB}{220,240,220}
+\definecolor{badrow}{RGB}{250,225,225}
+\definecolor{neutralrow}{RGB}{240,240,245}
+
+\newcommand{\good}[1]{\textcolor{green!50!black}{\textbf{#1}}}
+\newcommand{\bad}[1]{\textcolor{red!60!black}{#1}}
+\newcommand{\meh}[1]{\textcolor{gray!50!black}{#1}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{PS-SSR: All Methods Tried, All Results}}\\[2pt]
+{\small Comprehensive summary of methods and results on the 6Q Chinese consumer-health benchmark}\\[2pt]
+{\small Compiled 2026-04-24 \ \textbar\ \ Author: mzyy1001 \ \textbar\ \ Model: Qwen3-8B + bge-base-zh-v1.5}
+\end{center}
+
+\section{Setup}
+
+\textbf{Benchmark:} 6 real survey questions on Chinese consumer health (TCM 藿香正气水):
+8.0/qsingle\_3 (肠胃感冒季节), 8.0/qsingle\_4 (肠胃感冒场景), 9.0/qsingle\_3 (湿气原因), 9.0/qsingle\_4 (湿气症状), 9.0/qsingle\_5 (湿气缓解方法), 11.0/qsingle\_3 (中暑场景).
+
+\textbf{Data:} $\sim$12K Weibo/Xiaohongshu posts → 66 latent topic clusters.
+\textbf{Stack:} Qwen3-8B (open) + bge-base-zh-v1.5 embedder, single A100.
+\textbf{Primary metric:} mean JS divergence over the 6 questions (lower = better).
+\textbf{Secondary metrics:} $K_{xy}$ (KS-similarity, higher = better), $C_{xy}$ (cosine, higher = better) — for cross-paper diagnostic only (paper uses ordinal Likert; we have nominal multi-choice).
+
+\textbf{Reference baseline:} Maier et al.\ 2026, \emph{LLMs Reproduce Human Purchase Intent via Semantic Similarity Elicitation of Likert Ratings}. Their SSR is \textbf{per-consumer + flat-aggregated} (eq.~1: $p_s(i)=\frac{1}{N_s}\sum_c \delta_{i r_c}$). \textbf{No clustering, no cluster-mass weighting.}
+
+\textbf{Quarantined:} 23-question expanded eval (LLM-generated questions, not real surveys) is excluded from this report — see \texttt{results/quarantine\_23q/} and \texttt{experiments/quarantine\_23q/}.
+
+\section{Method Families (Brief Catalog)}
+
+Method families exhaustively tried, grouped by approach (each row in the next table corresponds to a family member):
+
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \textbf{Baselines}: Paper-SSR (Maier transfer, per-consumer flat); Direct SSR / M0 family (hierarchical cluster-weighted, sweep $n\_posts\in\{30,50,80,120,160\}$ and $top\text{-}K\in\{5,10,15,20\}$); persona-prompt baseline.
+\item \textbf{LLM-distribution (M1)}: LLM-dist top-K (cluster-conditioned, $n\_samples\in\{3,5,10\}$); LLM per-post voting; SSR + LLM correction.
+\item \textbf{Activation-steering (M3/M4)}: persona-vector extraction via CAA at $L\in\{8,12,16,20,24,28\}$; single-layer; multi-layer; ICL + steer; projected-persona SSR; steered M1.
+\item \textbf{Ensembles (M2)}: M0+M1 weight sweep; SSR + multi-layer-steer; selective ensemble (KL-thresholded); SSR + LLM-dist; M2+M4 triple.
+\item \textbf{Reweighting (alignment)}: default empirical; IS\_prov / IS\_age / IS\_prov+age; OT\_prov\_fast / OT\_prov\_sinkhorn; adaptive-$n$.
+\item \textbf{QAW family} (Question-Adaptive Weighting + demographic-reweighting): no consistent gain on 6Q; quarantined under \texttt{quarantine\_23q/}.
+\item \textbf{Controls}: random / shuffled / zero persona vectors as negative controls.
+\end{itemize}
+
+\section{Headline Results — All Families in One Table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r l}
+\toprule
+\textbf{Method} & \textbf{Mean JS} $\downarrow$ & \textbf{$\Delta$ vs paper-SSR} & \textbf{Source} \\
+\midrule
+\rowcolor{neutralrow}
+Paper-SSR (Maier transfer, per-consumer flat) & 0.0430 & --- & \texttt{paper\_ssr\_6q.json} \\
+\midrule
+\rowcolor{neutralrow}
+\multicolumn{4}{l}{\emph{Hierarchical cluster-weighted family (M0 / Direct SSR — primary novel contribution)}} \\
+Direct SSR n=30, top-10 & 0.0277 & $-35.6\%$ & \texttt{improve\_orig6.json} \\
+Direct SSR n=50, top-10 & 0.0275 & $-36.0\%$ & \texttt{improve\_orig6.json} \\
+Direct SSR n=80, top-10 & 0.0276 & $-35.8\%$ & \texttt{improve\_orig6.json} \\
+Direct SSR n=50, top-5 & 0.0272 & $-36.7\%$ & \texttt{improve\_orig6.json} \\
+\rowcolor{bestrow}
+\textbf{M0 hier-SSR canonical (n=50, top-10, seed=42)} & \textbf{0.0269} & $\mathbf{-37.5\%}$ & \texttt{m0\_m2\_pmfs\_6q.json} \\
+\midrule
+\rowcolor{neutralrow}
+\multicolumn{4}{l}{\emph{LLM-distribution family (M1)}} \\
+LLM-dist top-5 (n=3) & 0.0290 & $-32.6\%$ & \texttt{improve\_orig6.json} \\
+LLM-dist top-10 (n=3) & 0.0259 & $-39.8\%$ & \texttt{improve\_orig6.json} \\
+M1 vanilla (n\_samples=3, top-10) & 0.0264 & $-38.6\%$ & \texttt{steered\_m1\_6q.json} \\
+M1 vanilla (n=10, top-10) & 0.0259 & $-39.8\%$ & \texttt{stability\_6q.json} \\
+M1 alpha=0.05 (steered) & 0.0282 & $-34.4\%$ & \texttt{steered\_m1\_6q.json} \\
+M1 alpha=0.1 (steered) & 0.0291 & $-32.3\%$ & \texttt{steered\_m1\_6q.json} \\
+M1 alpha=0.2 / 0.3 (steered) & 0.0313 & $-27.2\%$ & \texttt{steered\_m1\_6q.json} \\
+\midrule
+\rowcolor{neutralrow}
+\multicolumn{4}{l}{\emph{Ensembles (M2 family)}} \\
+SSR + LLM-dist w=0.5 & 0.0257 & $-40.2\%$ & \texttt{improve\_orig6.json} \\
+SSR + LLM-dist w=0.6 & 0.0258 & $-40.0\%$ & \texttt{improve\_orig6.json} \\
+SSR + LLM-dist w=0.7 & 0.0259 & $-39.8\%$ & \texttt{improve\_orig6.json} \\
+M2 vanilla w=0.4 / 0.5 & 0.0252 & $-41.4\%$ & \texttt{steered\_m1\_6q.json} \\
+\rowcolor{bestrow}
+\textbf{M2 ensemble w=0.5 (M0+M1, canonical)} & \textbf{0.0254} & $\mathbf{-40.9\%}$ & \texttt{m0\_m2\_pmfs\_6q.json} \\
+LLM weight sweep n=10 w=0.3 & 0.0252 & $-41.4\%$ & \texttt{stability\_6q.json} \\
+M2+M4 triple ensemble (default) & 0.0286 & $-33.5\%$ & \texttt{alignment\_6q.json} \\
+Persona-methods Ensemble w=0.5 (BL=0.0276) & 0.0261 & $-39.3\%$ & \texttt{persona\_methods.json} \\
+Selective Ensemble w=0.9 t=0.005 & 0.0276 & $-35.8\%$ & \texttt{improve\_orig6.json} \\
+\midrule
+\rowcolor{neutralrow}
+\multicolumn{4}{l}{\emph{Activation-steering family (mostly negative)}} \\
+Single-layer $\alpha{=}0.1$ L24 & \bad{0.0659} & $+53.3\%$ & \texttt{fix\_steering\_results.json} \\
+Multi-layer $\alpha{=}0.1$ (L16,20,24) & 0.0298 & $-30.7\%$ & \texttt{fix\_steering\_results.json} \\
+Multi-layer n=10 & 0.0384 & $-10.7\%$ & \texttt{improve\_orig6.json} \\
+ML L=[12,16,20,24] (4-layer) & \bad{0.0643} & $+49.5\%$ & \texttt{improve\_orig6.json} \\
+ICL (5 posts, no steer) & 0.0368 & $-14.4\%$ & \texttt{fix\_steering\_results.json} \\
+ICL + steer $\alpha{=}0.3$ & 0.0420 & $-2.3\%$ & \texttt{fix\_steering\_results.json} \\
+Contrastive prompt & 0.0415 & $-3.5\%$ & \texttt{fix\_steering\_results.json} \\
+Large $\alpha{=}1.0$ normed & \bad{0.0689} & $+60.2\%$ & \texttt{fix\_steering\_results.json} \\
+\midrule
+\rowcolor{neutralrow}
+\multicolumn{4}{l}{\emph{Failed methods (kept for transparency)}} \\
+LLM voting (per-post) & \bad{0.2360} & $+449\%$ & \texttt{persona\_methods.json} \\
+SSR + LLM correction & \bad{0.0296} & $+8.0\%$ vs Direct SSR & \texttt{persona\_methods.json} \\
+Projected SSR s=0.1 & \bad{0.0560} & $+30.2\%$ & \texttt{persona\_methods.json} \\
+Projected SSR s=0.3 & \bad{0.0478} & $+11.2\%$ & \texttt{persona\_methods.json} \\
+Projected SSR s=0.5 & \bad{0.0405} & $-5.8\%$ & \texttt{persona\_methods.json} \\
+\bottomrule
+\end{tabular}
+\caption{Best results per method family. Baseline: paper-SSR transferred from Maier et al.\ 2026. Green: best-in-class; red: failed (worse than paper-SSR or worse than baseline).}
+\end{table}
+
+\section{Per-Question Honest Reporting}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r r r r r}
+\toprule
+\textbf{Question (Chinese health domain)} & \textbf{Paper-SSR} & \textbf{Direct SSR} & \textbf{M0} & \textbf{M1} & \textbf{M2} & \textbf{Best} \\
+\midrule
+8.0/qsingle\_3 (肠胃感冒季节) & 0.0307 & 0.0144 & \good{0.0134} & 0.0091 & \good{0.0105} & M1 \\
+8.0/qsingle\_4 (肠胃感冒场景) & \bad{0.1309} & 0.0466 & 0.0460 & 0.0506 & 0.0468 & M0 \\
+9.0/qsingle\_3 (湿气原因) & 0.0202 & \good{0.0193} & 0.0198 & 0.0434 & \bad{0.0304} & Direct SSR \\
+9.0/qsingle\_4 (湿气症状) & 0.0182 & 0.0175 & 0.0173 & 0.0174 & \good{0.0158} & M2 \\
+9.0/qsingle\_5 (湿气缓解方法) & 0.0398 & \good{0.0491} & \bad{0.0468} & 0.0317 & 0.0367 & M1 \\
+11.0/qsingle\_3 (中暑场景) & 0.0183 & 0.0181 & 0.0180 & 0.0086 & 0.0125 & M1 \\
+\midrule
+\textbf{Mean (6Q)} & 0.0430 & 0.0275 & \good{0.0269} & 0.0268 & \good{0.0254} & M2 \\
+\textbf{Mean (5Q, exclude Q2 outlier)} & 0.0254 & 0.0237 & 0.0231 & 0.0220 & \good{0.0212} & M2 \\
+\bottomrule
+\end{tabular}
+\caption{Per-question JS divergence. M0/M1/M2 numbers from \texttt{m0\_m2\_pmfs\_6q.json}. Q2 is an outlier where paper-SSR collapses (0.131); the cluster-hierarchical family fixes it. M2 hurts Q3 by $\sim$50\% (a real per-question loss). M0 hurts Q5 by $\sim$18\%. No method dominates uniformly.}
+\end{table}
+
+\textbf{Key honest observations:}
+\begin{itemize}[leftmargin=*,itemsep=0pt]
+\item Q2 (gut-cold scenarios) drives $\sim$2/3 of the cross-baseline gain. Without Q2, M2 vs paper-SSR shrinks from $-40.9\%$ to $-16.9\%$.
+\item M2 ensemble hurts Q3 ("湿气原因") by 50\% — likely because the LLM's distribution estimate disagrees strongly with SSR on this question, and naive averaging amplifies noise.
+\item M0 alone hurts Q5 ("湿气缓解方法") by 18\% — the cluster aggregation slightly underweights an important option.
+\item M1 (LLM-dist) wins on 3 of 6 questions individually but is unreliable (best on some, bad on Q3).
+\end{itemize}
+
+\section{Cross-Paper Diagnostic Metrics ($K_{xy}$, $C_{xy}$)}
+
+Computed only for the M0/M1/M2 dump and paper-SSR (the only methods that saved per-question PMFs).
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Method} & \textbf{JS} $\downarrow$ & \textbf{$K_{xy}$} $\uparrow$ & \textbf{$C_{xy}$} $\uparrow$ \\
+\midrule
+Paper-SSR (transferred) & 0.0430 & 0.827 & 0.877 \\
+M0 hier cluster-weighted SSR & 0.0269 & \good{0.858} & 0.923 \\
+M1 cluster LLM-dist & 0.0268 & 0.844 & 0.931 \\
+M2 ensemble w=0.5 & \good{0.0254} & 0.852 & \good{0.932} \\
+\midrule
+Maier headline (GPT-4o + demos, English Likert PI) & --- & 0.88 & 0.96 \\
+Maier no-demo control (English) & --- & 0.91 & 0.98 \\
+Maier DLR baseline (Likert direct) & --- & 0.26 & 0.26 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-paper diagnostic. $K_{xy}$ is mathematically appropriate only for ordinal Likert; our options are nominal multi-choice, so $K_{xy}$ comparisons across model/language/task are diagnostic only.}
+\end{table}
+
+\section{Stability Analyses}
+
+\subsection{Cluster-reweighting stability (alignment\_6q.json)}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Reweighting scheme} & \textbf{M0 JS} & \textbf{M1 JS} & \textbf{M2 JS} & \textbf{M4 JS (SSR+ML steer)} \\
+\midrule
+Default (empirical mass) & 0.0269 & 0.0261 & 0.0253 & 0.0315 \\
+IS by province & 0.0271 & 0.0261 & 0.0254 & 0.0315 \\
+IS by age & 0.0269 & 0.0261 & 0.0252 & 0.0315 \\
+IS by province+age & 0.0271 & 0.0261 & 0.0254 & 0.0315 \\
+OT province (fast) & 0.0272 & 0.0262 & 0.0255 & 0.0312 \\
+OT province (sinkhorn) & 0.0269 & 0.0261 & 0.0253 & 0.0315 \\
+\midrule
+\textbf{Range} & [0.0269, 0.0272] & [0.0261, 0.0262] & [0.0252, 0.0255] & [0.0312, 0.0315] \\
+\bottomrule
+\end{tabular}
+\caption{All M0/M1/M2 results are stable in tight bands across 6 reweighting schemes. The hierarchical pipeline is robust and not a single-variant artifact.}
+\end{table}
+
+\subsection{$n\_posts$ adaptive sweep}
+
+Adaptive-$n$ within the M0 family: $n=30 \to 0.0272$, $n=50 \to 0.0269$, $n=80 \to 0.0270$, $n=120 \to 0.0268$, $n=160 \to 0.0268$, adaptive-variance $\to 0.0272$. Diminishing returns beyond $n{=}50$.
+
+\subsection{Repeated-trial stability (M3 / M4)}
+
+\texttt{stability\_6q.json}: M4 (SSR + ML steer ensemble) over 3 trials: mean $0.0311 \pm 0.0002$ (stable, but worse than M0/M2). M3 (single-layer steer): $0.0397 \pm 0.0006$ (worse).
+
+\subsection{LLM weight sweep ($n\_samples$, $w$)}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r r r r}
+\toprule
+$n\_samples$ \textbackslash\ $w$ & 0.3 & 0.4 & 0.5 & 0.6 & 0.7 \\
+\midrule
+n=5  & 0.0265 & 0.0262 & 0.0260 & 0.0260 & 0.0260 \\
+n=10 & \good{0.0252} & \good{0.0252} & 0.0253 & 0.0254 & 0.0256 \\
+\bottomrule
+\end{tabular}
+\caption{Weight sweep on M2 ensemble. Best at $n{=}10$, $w\in\{0.3,0.4\}$ → 0.0252. Performance is flat across $w\in[0.3, 0.7]$, suggesting $w{=}0.5$ is not specifically tuned.}
+\end{table}
+
+\section{Steering / Persona-Vector Story (Demoted to Appendix)}
+
+\subsection{$\alpha \times L$ operating regime — pilot finding}
+
+In an earlier 23Q exploration (now quarantined), persona-vector steering was \emph{conditionally} useful:
+\begin{itemize}[leftmargin=*,itemsep=0pt]
+\item \textbf{Helps}: low $\alpha \le 0.3$ AND late layers $L \ge 24$ → up to $-21\%$ JS over unsteered.
+\item \textbf{Direction-irrelevant zone}: $\alpha \ge 0.5$ middle layers → random and shuffled vectors match real ones (negative control passes — bad sign).
+\end{itemize}
+
+\subsection{Negative controls}
+
+Per-layer sweep with random / zero / shuffled persona vectors (\texttt{sweep.log}, \texttt{control\_\{random,shuffled,zero\}.json}): at aggressive $\alpha$, real vectors win only 2/6 to 4/6 questions vs zero — barely above chance, inconsistent across questions. Confirms steering does not robustly use persona-direction information at the operating regimes that improve mean JS.
+
+\subsection{Why each failed method failed (one-liner)}
+
+\begin{itemize}[leftmargin=*,itemsep=0pt]
+\item \textbf{LLM voting (per-post, JS=0.236)}: LLM votes the same answer regardless of post content; massive within-cluster collapse.
+\item \textbf{SSR + LLM correction (JS=0.030)}: LLM rewrite adds noise to the SSR PMF.
+\item \textbf{Projected-persona SSR (JS=0.04--0.06)}: projecting anchor embeddings along the persona vector destroys the anchor geometry that SSR depends on.
+\item \textbf{QAW + demographic reweight}: no consistent gain on 6Q; quarantined under \texttt{quarantine\_23q/}.
+\item \textbf{Selective ensemble (JS=0.030)}: KL-thresholded blending under-uses the LLM signal vs the simple linear ensemble.
+\item \textbf{Steering at large $\alpha$ or many layers (JS=0.06--0.07)}: catastrophic — direction-irrelevant zone confirmed by random/shuffled controls matching real vectors.
+\end{itemize}
+
+\end{document}
