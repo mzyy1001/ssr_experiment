@@ -1,0 +1,169 @@
+{
+  "config": {
+    "seed": 42,
+    "tag": "13q_full"
+  },
+  "per_question_js": {
+    "paper_ssr": {
+      "9.0/qsingle_3": 0.0164,
+      "9.0/qsingle_4": 0.0138,
+      "9.0/qsingle_5": 0.0558,
+      "8.0/qsingle_3": 0.0103,
+      "8.0/qsingle_4": 0.135,
+      "8.0/qsingle_5": 0.0484,
+      "11.0/qsingle_3": 0.0158,
+      "11.0/qsingle_4": 0.0271,
+      "10.0/qsingle_3": 0.0124,
+      "10.0/qsingle_5": 0.1508,
+      "7.0/qsingle_3": 0.0077,
+      "7.0/qsingle_4": 0.0379,
+      "7.0/qsingle_5": 0.0117
+    },
+    "direct_llm": {
+      "9.0/qsingle_3": 0.089,
+      "9.0/qsingle_4": 0.1281,
+      "9.0/qsingle_5": 0.0592,
+      "8.0/qsingle_3": 0.2796,
+      "8.0/qsingle_4": 0.0468,
+      "8.0/qsingle_5": 0.0178,
+      "11.0/qsingle_3": 0.1473,
+      "11.0/qsingle_4": 0.0988,
+      "10.0/qsingle_3": 0.1315,
+      "10.0/qsingle_5": 0.184,
+      "7.0/qsingle_3": 0.1552,
+      "7.0/qsingle_4": 0.2467,
+      "7.0/qsingle_5": 0.27
+    },
+    "flat_ssr": {
+      "9.0/qsingle_3": 0.0367,
+      "9.0/qsingle_4": 0.0103,
+      "9.0/qsingle_5": 0.0652,
+      "8.0/qsingle_3": 0.0082,
+      "8.0/qsingle_4": 0.0512,
+      "8.0/qsingle_5": 0.03,
+      "11.0/qsingle_3": 0.0173,
+      "11.0/qsingle_4": 0.0211,
+      "10.0/qsingle_3": 0.0164,
+      "10.0/qsingle_5": 0.0912,
+      "7.0/qsingle_3": 0.0086,
+      "7.0/qsingle_4": 0.055,
+      "7.0/qsingle_5": 0.0181
+    },
+    "m0": {
+      "9.0/qsingle_3": 0.0331,
+      "9.0/qsingle_4": 0.0102,
+      "9.0/qsingle_5": 0.0634,
+      "8.0/qsingle_3": 0.0079,
+      "8.0/qsingle_4": 0.046,
+      "8.0/qsingle_5": 0.028,
+      "11.0/qsingle_3": 0.018,
+      "11.0/qsingle_4": 0.0192,
+      "10.0/qsingle_3": 0.0153,
+      "10.0/qsingle_5": 0.0893,
+      "7.0/qsingle_3": 0.008,
+      "7.0/qsingle_4": 0.0557,
+      "7.0/qsingle_5": 0.0168
+    },
+    "m1": {
+      "9.0/qsingle_3": 0.0573,
+      "9.0/qsingle_4": 0.0097,
+      "9.0/qsingle_5": 0.0455,
+      "8.0/qsingle_3": 0.0032,
+      "8.0/qsingle_4": 0.057,
+      "8.0/qsingle_5": 0.0672,
+      "11.0/qsingle_3": 0.01,
+      "11.0/qsingle_4": 0.0535,
+      "10.0/qsingle_3": 0.0058,
+      "10.0/qsingle_5": 0.0519,
+      "7.0/qsingle_3": 0.0006,
+      "7.0/qsingle_4": 0.0367,
+      "7.0/qsingle_5": 0.0227
+    },
+    "c2": {
+      "9.0/qsingle_3": 0.042464055772071053,
+      "9.0/qsingle_4": 0.012045004343768935,
+      "9.0/qsingle_5": 0.024930233528875634,
+      "8.0/qsingle_3": 0.0012039401348410976,
+      "8.0/qsingle_4": 0.046579459914323426,
+      "8.0/qsingle_5": 0.03266012440127192,
+      "11.0/qsingle_3": 0.019134891925001497,
+      "11.0/qsingle_4": 0.06835968900304389,
+      "10.0/qsingle_3": 0.031088949210034706,
+      "10.0/qsingle_5": 0.029658811799532527,
+      "7.0/qsingle_3": 0.013269956518251946,
+      "7.0/qsingle_4": 0.06862394873994428,
+      "7.0/qsingle_5": 0.0262346129484558
+    }
+  },
+  "trend_results": {
+    "9.0/qsingle_3": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "9.0/qsingle_4": {
+      "sem_ok": true,
+      "llm_ok": true
+    },
+    "9.0/qsingle_5": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "8.0/qsingle_3": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "8.0/qsingle_4": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "11.0/qsingle_3": {
+      "sem_ok": false,
+      "llm_ok": true
+    },
+    "8.0/qsingle_5": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "11.0/qsingle_4": {
+      "sem_ok": true,
+      "llm_ok": true
+    },
+    "10.0/qsingle_3": {
+      "sem_ok": true,
+      "llm_ok": true
+    },
+    "10.0/qsingle_5": {
+      "sem_ok": true,
+      "llm_ok": false
+    },
+    "7.0/qsingle_3": {
+      "sem_ok": true,
+      "llm_ok": true
+    },
+    "7.0/qsingle_4": {
+      "sem_ok": false,
+      "llm_ok": true
+    },
+    "7.0/qsingle_5": {
+      "sem_ok": true,
+      "llm_ok": true
+    }
+  },
+  "kept_questions": [
+    "9.0/qsingle_4",
+    "11.0/qsingle_4",
+    "10.0/qsingle_3",
+    "7.0/qsingle_3",
+    "7.0/qsingle_5"
+  ],
+  "dropped_questions": [
+    "9.0/qsingle_3",
+    "9.0/qsingle_5",
+    "8.0/qsingle_3",
+    "8.0/qsingle_4",
+    "11.0/qsingle_3",
+    "8.0/qsingle_5",
+    "10.0/qsingle_5",
+    "7.0/qsingle_4"
+  ]
+}

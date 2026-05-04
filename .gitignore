@@ -25,3 +25,6 @@ Auto-claude-code-research-in-sleep/
 
 # Redundant archive (contents already in paper/selection_bias/)
 paper/selection bias.zip
+
+# Windows mark-of-the-web artifact
+*:Zone.Identifier
